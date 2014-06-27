@@ -1,0 +1,30 @@
+sysbench --test=sysbench_tests/db/parallel_prepare.lua --db-driver=mysql --oltp-table-size=1000000 --oltp-tables-count=20 --mysql-user=test --mysql-password=test --mysql-host=ec2-54-193-180-66.us-west-1.compute.amazonaws.com --num-threads=20 run
+
+
+Needs to be built and populated in advance (way in advance)
+
+sysbench --test=sysbench_tests/db/oltp.lua --db-driver=mysql --oltp-table-size=1000000 --oltp-tables-count=20 --num-threads=32 --max-time=0 --max-requests=0 --report-interval=10 --rand-type=gaussian --mysql-user=test --mysql-password=test --mysql-host=ec2-54-193-180-66.us-west-1.compute.amazonaws.com --mysql-port=3306 --rand-init=on run
+
+
+
+[  10s] threads: 32, tps: 11.28, reads/s: 186.58, writes/s: 45.72, response time: 5259.90ms (95%)
+[  20s] threads: 32, tps: 12.20, reads/s: 171.50, writes/s: 48.90, response time: 7815.72ms (95%)
+[  30s] threads: 32, tps: 12.50, reads/s: 174.40, writes/s: 49.90, response time: 6633.28ms (95%)
+[  40s] threads: 32, tps: 12.20, reads/s: 172.70, writes/s: 48.90, response time: 9984.12ms (95%)
+[  50s] threads: 32, tps: 10.70, reads/s: 150.20, writes/s: 42.70, response time: 9765.40ms (95%)
+[  60s] threads: 32, tps: 12.50, reads/s: 173.60, writes/s: 50.10, response time: 7628.49ms (95%)
+
+
+HAproxy load balancing
+
+[  10s] threads: 32, tps: 28.70, reads/s: 429.76, writes/s: 118.32, response time: 1506.02ms (95%)
+[  20s] threads: 32, tps: 24.10, reads/s: 337.90, writes/s: 96.20, response time: 1933.67ms (95%)
+[  30s] threads: 32, tps: 23.60, reads/s: 327.80, writes/s: 92.90, response time: 2072.73ms (95%)
+[  40s] threads: 32, tps: 22.20, reads/s: 315.50, writes/s: 91.30, response time: 2149.18ms (95%)
+[  50s] threads: 32, tps: 23.60, reads/s: 320.80, writes/s: 91.10, response time: 2125.51ms (95%)
+[  60s] threads: 32, tps: 20.60, reads/s: 295.30, writes/s: 84.00, response time: 2231.79ms (95%)
+[  70s] threads: 32, tps: 19.90, reads/s: 285.90, writes/s: 82.20, response time: 2389.43ms (95%)
+[  80s] threads: 32, tps: 19.90, reads/s: 276.70, writes/s: 79.30, response time: 2539.88ms (95%)
+
+
+ sysbench --test=sysbench_tests/db/oltp.lua --db-driver=mysql --oltp-table-size=1000000 --oltp-tables-count=20 --num-threads=32 --max-time=0 --max-requests=0 --report-interval=10 --oltp-dist-type=special --oltp-dist-pct=10 --oltp-dist-res=95 --mysql-user=test --mysql-password=test --rand-init=on  --mysql-host=ec2-54-193-180-66.us-west-1.compute.amazonaws.com --mysql-port=5306 run
