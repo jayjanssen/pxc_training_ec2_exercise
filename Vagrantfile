@@ -14,7 +14,7 @@ $mysql_version = "56"
 $region = 'us-west-1'
 $pxc_instance_size = 'm3.large'  
 $tester_instance_size = 'c3.large'
-$num_teams = 1
+$num_teams = 10
 
 $puppet_config = {
 	"percona_server_version"	=> $mysql_version,
@@ -57,32 +57,32 @@ def build_team(config, team_name )
 			node_config.vm.hostname = node_name
       
       # Provisioners
-      provision_puppet( config, "base.pp" )
-      provision_puppet( config, "pxc_server.pp" ) { |puppet|  
+      provision_puppet( node_config, "base.pp" )
+      provision_puppet( node_config, "pxc_server.pp" ) { |puppet|  
         puppet.facter = $puppet_config
       }
-      provision_puppet( config, "pxc_client.pp" ) { |puppet|
+      provision_puppet( node_config, "pxc_client.pp" ) { |puppet|
         puppet.facter = $puppet_config
       }
-      provision_puppet( config, "percona_toolkit.pp" )
-      provision_puppet( config, "myq_gadgets.pp" )
+      provision_puppet( node_config, "percona_toolkit.pp" )
+      provision_puppet( node_config, "myq_gadgets.pp" )
 			
-      provision_puppet( config, "sysbench.pp" )
+      provision_puppet( node_config, "sysbench.pp" )
 			
 			# Setup a sysbench environment and test user on node1
 			if name == 'node1'
-	      provision_puppet( config, "sysbench_load.pp" ) { |puppet|
+	      provision_puppet( node_config, "sysbench_load.pp" ) { |puppet|
 					puppet.facter = {
 						'tables' => 20,
 						'rows' => 1000000,
 						'threads' => 4
 					}
 				}
-				provision_puppet( config, "test_user.pp" )
+				provision_puppet( node_config, "test_user.pp" )
 			end
   
       # Provider -- aws only
-    	provider_aws( "PXC training #{node_name}", config, $pxc_instance_size, node_params['aws_region'], node_params['security_groups']) { |aws, override|
+    	provider_aws( "PXC training #{node_name}", node_config, $pxc_instance_size, node_params['aws_region'], node_params['security_groups']) { |aws, override|
     		aws.block_device_mapping = [
     			{
     				'DeviceName' => "/dev/sdb",
@@ -100,14 +100,14 @@ def build_team(config, team_name )
   # Create a tester node for the team
   tester_name = team_name + 'test'
   config.vm.define tester_name do |node_config|
-    provision_puppet( config, "base.pp" )
-    provision_puppet( config, "pxc_client.pp" ) { |puppet|
+    provision_puppet( node_config, "base.pp" )
+    provision_puppet( node_config, "pxc_client.pp" ) { |puppet|
       puppet.facter = $puppet_config
     }
-    provision_puppet( config, "sysbench.pp" )
+    provision_puppet( node_config, "sysbench.pp" )
     
     # Provider -- aws only
-  	provider_aws( "PXC training #{tester_name}", config, $tester_instance_size, $region, ['default','pxc']) { |aws, override|
+  	provider_aws( "PXC training #{tester_name}", node_config, $tester_instance_size, $region, ['default','pxc']) { |aws, override|
   		aws.block_device_mapping = [
   			{
   				'DeviceName' => "/dev/sdb",
