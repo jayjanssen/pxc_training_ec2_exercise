@@ -67,10 +67,11 @@ for node in "${node_list[@]}"
 do
     if $bootstrapped
     then
-        vagrant ssh $node -c "service mysql stop; rm /var/lib/mysql/grastate.dat"
+        vagrant ssh $node -c "service mysql stop; rm /var/lib/mysql/grastate.dat /var/lib/mysql/*-bin.*"
         vagrant ssh $node -c "service mysql start"
     else
-        vagrant ssh $node -c "service mysql stop; service mysql bootstrap-pxc"
+        vagrant ssh $node -c "service mysql stop; rm /var/lib/mysql/*-bin.*"
+        vagrant ssh $node -c "service mysql bootstrap-pxc"
         # Setup SST user on bootstrapped node
         vagrant ssh $node -c "mysql -e \"GRANT RELOAD, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'sst'@'localhost' IDENTIFIED BY 'secret'\""
         bootstrapped=true
